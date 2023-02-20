@@ -2,6 +2,6 @@
 
 void simulate(string filename, restaurant* r)
 {
-
+    return;
 }
 
