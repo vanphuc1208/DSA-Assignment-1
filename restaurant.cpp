@@ -84,7 +84,7 @@ public:
 queue* q = new queue();// danh sach hang doi
 queue* qps = new queue();// danh sach khach den nha hang
 queue* qpq = new queue();// danh sach hang doi dung de in khach den trc
-bool ismerge = 0;// khoi tao la chua gop ban
+int numMtable=0;//khoi tao so ban dang dc gop neu bang 0 la chua co ban gop
 table* Mtable;// luu ban bat dau merge
 table* nextMtable; // luu ban tiep theo cua merge de dung lai trong ham cle
 
@@ -111,10 +111,6 @@ bool findID(restaurant* r, int ID) {
     return false;
 }// ham tim kiem theo ID
 
-bool checkreg(string s) {
-    if (!isdigit(s[s.length() - 1])) return false;// ky tu cuoi khac so thi lenh k thoa
-    return (s[0] == 'R' && s[1] == 'E' && s[2] == 'G' && s[3] != 'M');
-}// ham check lenh reg
 void reg(restaurant* r, int ID, string name, int age) {
     if (age < 16) return;//khach duoi 16 tuoi se khong phuc vu
     qps->addps(ID, name, age);// add vao hang doi danh sach khach cua nha hang
@@ -140,6 +136,7 @@ void reg(restaurant* r, int ID, string name, int age) {
         }// duyet them phan tu cuoi
         minID->name = name;
         minID->age = age;
+        r->recentTable=minID;
     }
     else {
         table* tmp = r->recentTable;
@@ -156,14 +153,9 @@ void reg(restaurant* r, int ID, string name, int age) {
         }
         tmp->age = age;
         tmp->name = name;
+         r->recentTable=tmp;
     }
 }
-
-bool checkregm(string s) {
-    if (!isdigit(s[s.length() - 1])) return false;// ky tu cuoi khac so thi lenh k thoa
-     if (isdigit(s[5])) return false;//tranh truong hop sau regm la so k phai name REGM 3 be 50 
-    return (s[0] == 'R' && s[1] == 'E' && s[2] == 'G' && s[3] == 'M');
-}// ham check lenh regm
 
 int maxAdjacentTable(restaurant* r) {// ham tim so ban max canh nhau
 int res=0;
@@ -181,63 +173,12 @@ for(int i=0;i<2*MAXSIZE;i++) {
    tmp=tmp->next;
 }
 return res;
-//    int countTable = 1;
-// 	int result = 0;
-// 	table* ptr = r->recentTable;
-// 	table* flag = NULL;
-// 	// Find an occupied table for flag
-// 	for (int i = 0; i < MAXSIZE; i++)
-// 	{
-// 		if (countTable >= MAXSIZE) {
-// 			return MAXSIZE;
-// 		}
-// 		if (ptr->age == 0) {
-// 			countTable++;
-// 		}
-// 		else {
-// 			flag = ptr;
-// 			ptr = r->recentTable;
-// 			countTable = 0;
-// 			break;
-// 		}
-// 		ptr = ptr->next;
-// 	}
-// 	// Find max
-// 	// Duyet 2 lan phong truong hop xau nhat
-// 	for (int i = 1; i < MAXSIZE * 2; i++)
-// 	{
-// 		if (ptr->age == 0) {
-// 			countTable++;
-// 			ptr = ptr->next;
-// 		}
-// 		else {
-// 			if (i >= MAXSIZE) {
-// 				// Break if meet flag
-// 				if (ptr == flag) {
-// 					if (result < countTable) {
-// 						result = countTable;
-// 						return result;
-// 					}
-// 					else {
-// 						return result;
-// 					}
-// 				}
-// 			}
-// 			// Continue the ptr
-// 			if (result < countTable) {
-// 				result = countTable;
-// 			}
-// 			countTable = 0;
-// 			ptr = ptr->next;
-// 		}
-// 	}
-   
 }
 
 // ham tim ban co ID lon nhat de merge
 table* mergetable(restaurant* r, int num) {
     table* tmp = r->recentTable;// duyet het cac ban
-    while (tmp->ID != 1) { // cai nay khong anh huong boi ham tron vi khi ismerge=0 ms thuc hien
+    while (tmp->ID != 1) { // cai nay khong anh huong boi ham tron vi khi numMtable=0 ms thuc hien
         tmp = tmp->next;
     }// chi toi ban co ID bang 1 roi do ban trong tu day
     table* ptr = tmp;// danh dau vi tri co the la mergetable
@@ -264,8 +205,8 @@ table* mergetable(restaurant* r, int num) {
     return mergetable;
 }
 
-void regm(restaurant* r, string name, int age, int num) {// bien ismerge de check da gop ban nao hay chua khi chua co se thuc hien lenh gop ban va cho ismerge=1
-    if (ismerge || checkFull(r) || maxAdjacentTable(r) < num || age < 16) return;
+void regm(restaurant* r, string name, int age, int num) {// bien numMtable de check da gop ban nao hay chua khi chua co se thuc hien lenh gop ban va cho numMtable=num
+    if (numMtable || checkFull(r) || maxAdjacentTable(r) < num || age < 16) return;
     qps->addps(0, name, age);
     Mtable = mergetable(r, num);
     Mtable->name = name;
@@ -276,14 +217,10 @@ void regm(restaurant* r, string name, int age, int num) {// bien ismerge de chec
         tmp = tmp->next;
     }
     Mtable->next = tmp;
-    ismerge = 1;
+    numMtable = num;
     r->recentTable = Mtable;// de khong bi truong hop recent table nam trong ban da gop anh huong cac ham khac
 }
 
-bool checkcle(string s) {
-    if (!isdigit(s[s.length() - 1])) return false;// ky tu cuoi khac so thi lenh k thoa
-    return (s[0] == 'C' && s[1] == 'L' && s[2] == 'E');
-}
 
 void cle(restaurant* r, int ID) {
     if (!findID(r, ID)) return;
@@ -293,19 +230,54 @@ void cle(restaurant* r, int ID) {
     }
     if (tmp->age == 0) return;
     qps->removeItem(tmp->name, tmp->age);// xoa khoi danh sach hang doi khach khi khach an xong di ve
+
     if (tmp == Mtable) {
-        ismerge = 0;
+        int avaiTable=numMtable;
+        numMtable = 0;
         Mtable->next = nextMtable;
         tmp->name = "";
         tmp->age = 0;
-        // dua khach trong hang doi vao cho den khi het so ban sau khi gop
-        while (tmp->age == 0 && q->size != 0) {
-            tmp->name = q->head->name;
-            tmp->age = q->head->age;
-            q->remove();// dua vao ban xoa khach khoi hang doi
-            qpq->removeItem(tmp->name, tmp->age);// tim dung nguoi dc dua vao o dau hang q xoa trong qpq de k in nua
+        while(avaiTable>0 && q->size!=0) {
+            int ID=q->head->ID;
+            string name=q->head->name;
+            int age=q->head->age;
+            q->remove();
+            qpq->removeItem(name,age);
+            if (ID == 0) {
+        table* tmp = r->recentTable;
+        table* minID = tmp;// luu vi tri ban trong vs ID nho nhat
+        while (minID->age != 0) {
+            minID = minID->next;
+        } // tim toi vi tri trong gan nhat phong TH chi con ban trong sau recenttable
+        while (tmp->next != r->recentTable) {
+            if (tmp->age == 0 && tmp->ID < minID->ID) {
+                minID = tmp;
+            }
+            tmp = tmp->next;
+        }// roi moi do tiep xem co ban trong co ID nho hon k
+        if (tmp->age == 0 && tmp->ID < minID->ID) {
+            minID = tmp;
+        }// duyet them phan tu cuoi
+        minID->name = name;
+        minID->age = age;
+        r->recentTable=minID;
+          }
+          else {
+        table* tmp = r->recentTable;
+            while (tmp->ID != ID) {
+                tmp = tmp->next;
+            }// chi toi ban co ID vi khach muon dat
+        while (tmp->age != 0) {//kiem tra ban trong ngay sau 
             tmp = tmp->next;
         }
+        tmp->age = age;
+        tmp->name = name;
+        r->recentTable=tmp;
+    }
+
+            avaiTable--;
+    }
+
     }
     else {
         tmp->name = "";
@@ -319,10 +291,6 @@ void cle(restaurant* r, int ID) {
     }
 }
 
-bool checkps(string s) {
-    if (s.length() > 2 && !isdigit(s[s.length() - 1])) return false; // ky tu cuoi khac so thi lenh k thoa
-    return (s[0] == 'P' && s[1] == 'S');
-}
 
 void ps(int num) {
     if (qps->size == 0) {
@@ -337,10 +305,6 @@ void ps(int num) {
     }
 }
 
-bool checkpq(string s) {
-    if (s.length() > 2 && !isdigit(s[s.length() - 1])) return false; // ky tu cuoi khac so thi lenh k thoa
-    return(s[0] == 'P' && s[1] == 'Q');
-}
 
 void pq(int num) {// TH num=0 la se k co tham so num tu dong in het
     if (qpq->size == 0) {
@@ -353,11 +317,6 @@ void pq(int num) {// TH num=0 la se k co tham so num tu dong in het
         cout << tmp->name << endl;
         tmp = tmp->next;
     }
-}
-
-bool checksq(string s) {
-    if (!isdigit(s[s.length() - 1])) return false;// ky tu cuoi khac so thi lenh k thoa
-    return (s[0] == 'S' && s[1] == 'Q');
 }
 
 void sq(int num) {
@@ -377,6 +336,7 @@ void sq(int num) {
         }
         string saveName; saveName = tmp->name; tmp->name = maxPos->name; maxPos->name = saveName;// swap name
         int saveAge; saveAge = tmp->age; tmp->age = maxPos->age; maxPos->age = saveAge;//swap age
+        int saveID; saveID = tmp->ID; tmp->ID = maxPos->ID; maxPos->ID = saveID;//swap age
         i++;
         tmp = tmp->next;
     }
@@ -387,20 +347,15 @@ void sq(int num) {
     }
 }
 
-void test(restaurant* r) {
+void pt(restaurant* r) {
     table* tmp = r->recentTable;
     while (tmp->next != r->recentTable) {
-        cout << tmp->ID << " " << tmp->name << " " << tmp->age << endl;
+        if (tmp->age==0) cout << tmp->ID << "-Empty" <<endl;
+        else cout << tmp->ID << "-" << tmp->name <<endl;
         tmp = tmp->next;
     }
-    cout << tmp->ID << " " << tmp->name << " " << tmp->age << endl;// in ra thong tin ban  co ID cao nhat
-}
-
-bool checkDuplicateSpace(string s) {
-    for (int i = 0; i < s.length() - 1; i++) {
-        if (s[i] == ' ' && s[i + 1] == ' ') return true;
-    }
-    return false;
+    if (tmp->age==0) cout << tmp->ID << "-Empty" <<endl;
+    else cout << tmp->ID << "-" << tmp->name <<endl;
 }
 
 void simulate(string filename, restaurant* r)
@@ -408,124 +363,75 @@ void simulate(string filename, restaurant* r)
     ifstream filein; // ifstream ofstream 
     filein.open(filename);
     string s;
-    while (getline(filein, s)) {
-        if (s[0] == ' ' || s[s.length() - 1] == ' ' || checkDuplicateSpace(s)) continue; // check khoang trang dau cuoi neu co thi lenh do bi bo qua
-        if (checkreg(s)) {
-            int ID, age;
-            string name = "";
-            string Sage = "";
-            if (isdigit(s[4])) {// TH khach co yeu cau ID
-                int i = 4;
-                string tmp = "";
-                while (s[i] != ' ') {
-                    tmp += s[i];
-                    i++;
-                }
-                i++;
-                while (s[i] != ' ') {
-                    name += s[i];
-                    i++;
-                }
-                i++;
-                while (i < s.length()) {
-                    Sage += s[i];
-                    i++;
-                }
-                ID = stoi(tmp);
-                age = stoi(Sage);
-            }
-            else {
-                int i = 4;
-                while (s[i] != ' ') {
-                    name += s[i];
-                    i++;
-                }
-                i++;
-                while (i < s.length()) {
-                    Sage += s[i];
-                    i++;
-                }
-                ID = 0;
-                age = stoi(Sage);
-            }
-            reg(r, ID, name, age);
-        }// xu ly xong lenh reg
+    while (getline(filein,s))
+    {
+        if(s.substr(0,4)=="REGM") {// tranh TH ham REG trc thi REGM cx substr(0,3) la REG
+            int fSpace = s.find(" ", 5);
+            int sSpace = s.find(" ", fSpace+1);
+            string name,sage,snum;
+            name=s.substr(5,fSpace-5);
+            sage=s.substr(fSpace+1,sSpace-fSpace-1);
+            snum=s.substr(sSpace+1);
+            regm(r,name,stoi(sage),stoi(snum));
+        }
 
-        else if (checkregm(s)) {
-            int i = 5;
-            string name = "";
-            string Sage = "";
-            string Snum = "";
-            while (s[i] != ' ') {
-                name += s[i];
-                i++;
+        else if(s.substr(0,3)=="REG") {
+            string sID,name,sage;
+            int fSpace = s.find(" ", 4);
+            int sSpace = s.find(" ", fSpace+1);
+            if(sSpace != string::npos) //co ID{
+            {
+                 sID=s.substr(4,fSpace-4);
+                 name=s.substr(fSpace+1,sSpace-fSpace-1);
+                 sage=s.substr(sSpace+1);
             }
-            i++;
-            while (s[i] != ' ') {
-                Sage += s[i];
-                i++;
+            else {// k co ID
+                 sID="0";
+                 name=s.substr(4,fSpace-4);
+                 sage=s.substr(fSpace+1);
             }
-            i++;
-            while (i < s.length()) {
-                Snum += s[i];
-                i++;
-            }
-            int age = stoi(Sage);
-            int num = stoi(Snum);
-            regm(r, name, age, num);
-        }// xu ly xong lenh regm
+            reg(r,stoi(sID),name,stoi(sage));
+        }
 
-        else if (checkcle(s)) {
-            string SID = "";
-            for (int i = 4; i < s.length(); i++) {
-                SID += s[i];
-            }
-            int ID = stoi(SID);
-            cle(r, ID);
-        }// xu ly xong lenh cle
+        else if(s.substr(0,3)=="CLE") {
+            string sID=s.substr(4);
+            cle(r,stoi(sID));
+        }
 
-        else if (checkps(s)) {
-            if (s.length() == 2) {//TH k co num
-                ps(0);
-                continue;
+        else if(s.substr(0,2)=="PS") {
+            if(s.find(" ",2) !=string::npos) {//co tham so num
+              string snum=s.substr(3);
+              ps(stoi(snum));
             }
-            string Snum = "";
-            for (int i = 3; i < s.length(); i++) {
-                Snum += s[i];
-            }
-            int num = stoi(Snum);
-            ps(num);
-        }// xu ly xong lenh ps
+            else ps(0);
+        }
 
-        else if (checkpq(s)) {
-            if (s.length() == 2) {// TH k co num
-                pq(0);
-                continue;
+        else if(s.substr(0,2)=="PQ") {
+            if(s.find(" ",2) !=string::npos) {//co tham so num
+              string snum=s.substr(3);
+              pq(stoi(snum));
             }
-            string Snum = "";
-            for (int i = 3; i < s.length(); i++) {
-                Snum += s[i];
-            }
-            int num = stoi(Snum);
-            pq(num);
-        }// xu ly xong lenh pq
+            else pq(0);
+        }
 
-        else if (checksq(s)) {
-            string Snum = "";
-            for (int i = 3; i < s.length(); i++) {
-                Snum += s[i];
-            }
-            int num = stoi(Snum);
-            sq(num);
-        }// xu ly xong lenh sq
+        else if(s.substr(0,2)=="SQ") {
+            string snum=s.substr(3);
+            sq(stoi(snum));
+        }
+        else if(s.substr(0,2)=="PT") 
+        {
+            pt(r);
+        }
+        
 
     }
-    filein.close();
+    
+filein.close();
 
      //xoa rac trong bo nho sau khi xu ly xong
      q->clear(); qps->clear(); qpq->clear();
-   // cout<<maxAdjacentTable(r)<<endl;
-   //    test(r);
+    //cout<<maxAdjacentTable(r)<<endl;
+      //test(r);
    //    cout<<"Print queue:"<<endl;
    //    q->print();
      //table *tmp=mergetable(r,4);
