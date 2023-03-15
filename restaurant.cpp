@@ -72,13 +72,6 @@ public:
         }
         size = 0;
     }
-    void print() {
-        table* tmp = head;
-        while (tmp != NULL) {
-            cout << tmp->ID << " " << tmp->name << " " << tmp->age << endl;
-            tmp = tmp->next;
-        }
-    }
 };
 
 queue* q = new queue();// danh sach hang doi
@@ -113,7 +106,7 @@ bool findID(restaurant* r, int ID) {
 
 void reg(restaurant* r, int ID, string name, int age) {
     if (age < 16) return;//khach duoi 16 tuoi se khong phuc vu
-    qps->addps(ID, name, age);// add vao hang doi danh sach khach cua nha hang
+    if (!checkFull(r) || q->size!=MAXSIZE)qps->addps(ID, name, age);// add vao hang doi danh sach khach cua nha hang khi ban va hang doi con tron
     if (checkFull(r)) {//neu da full ban
         q->add(ID, name, age);// them vao cuoi hang doi
         qpq->add(ID, name, age);// them vao cuoi hang doi
@@ -190,7 +183,7 @@ table* mergetable(restaurant* r, int num) {
             if (count == 0) ptr = tmp;
             count++;
         }
-        if (ptr->ID <= maxID) break;
+        if (ptr->ID <= maxID && count==num) break;
         if (count == num) {
             mergetable = ptr;
             maxID = mergetable->ID;
@@ -230,8 +223,8 @@ void cle(restaurant* r, int ID) {
     }
     if (tmp->age == 0) return;
     qps->removeItem(tmp->name, tmp->age);// xoa khoi danh sach hang doi khach khi khach an xong di ve
-
-    if (tmp == Mtable) {
+    r->recentTable=tmp;
+    if (tmp == Mtable&&numMtable!=0) {// check do co phai ban gop va dang co ban gop hay k
         int avaiTable=numMtable;
         numMtable = 0;
         Mtable->next = nextMtable;
@@ -287,6 +280,7 @@ void cle(restaurant* r, int ID) {
             tmp->age = q->head->age;
             q->remove();// dua vao ban xoa khach khoi hang doi
             qpq->removeItem(tmp->name, tmp->age);// tim dung nguoi dc dua vao o dau hang q xoa trong qpq de k in nua
+            r->recentTable=tmp;
         }// neu co nguoi trong hang doi thi cho vao ban 
     }
 }
@@ -350,12 +344,10 @@ void sq(int num) {
 void pt(restaurant* r) {
     table* tmp = r->recentTable;
     while (tmp->next != r->recentTable) {
-        if (tmp->age==0) cout << tmp->ID << "-Empty" <<endl;
-        else cout << tmp->ID << "-" << tmp->name <<endl;
+        if(tmp->age!=0) cout << tmp->ID << "-" << tmp->name <<endl;
         tmp = tmp->next;
     }
-    if (tmp->age==0) cout << tmp->ID << "-Empty" <<endl;
-    else cout << tmp->ID << "-" << tmp->name <<endl;
+    if(tmp->age!=0) cout << tmp->ID << "-" << tmp->name <<endl;
 }
 
 void simulate(string filename, restaurant* r)
@@ -363,6 +355,7 @@ void simulate(string filename, restaurant* r)
     ifstream filein; // ifstream ofstream 
     filein.open(filename);
     string s;
+    // quy doi string::npos=-1 de chay dc tren bkel
     while (getline(filein,s))
     {
         if(s.substr(0,4)=="REGM") {// tranh TH ham REG trc thi REGM cx substr(0,3) la REG
@@ -379,7 +372,7 @@ void simulate(string filename, restaurant* r)
             string sID,name,sage;
             int fSpace = s.find(" ", 4);
             int sSpace = s.find(" ", fSpace+1);
-            if(sSpace != string::npos) //co ID{
+            if(s.find(" ", fSpace+1) !=string::npos) //co ID{
             {
                  sID=s.substr(4,fSpace-4);
                  name=s.substr(fSpace+1,sSpace-fSpace-1);
@@ -427,14 +420,6 @@ void simulate(string filename, restaurant* r)
     }
     
 filein.close();
-
-     //xoa rac trong bo nho sau khi xu ly xong
      q->clear(); qps->clear(); qpq->clear();
-    //cout<<maxAdjacentTable(r)<<endl;
-      //test(r);
-   //    cout<<"Print queue:"<<endl;
-   //    q->print();
-     //table *tmp=mergetable(r,4);
-     //cout<<tmp->ID;
 }
 
