@@ -1,7 +1,24 @@
 #include "main.h"
+int count=0;// danh dau idx
+class custumerInfo{
+    public:
+    int ID;
+    string name;
+    int age;
+    int idx;
+    custumerInfo* next;
+    custumerInfo(int ID, string name, int age, custumerInfo* next, int idx=0)
+    {
+        this->ID = ID;
+        this->name = name;
+        this->age = age;
+        this->idx=idx;
+        this->next = next;
+    }
+};
 class queue {
 public:
-    table* head;
+    custumerInfo* head;
     int size;
     queue() {
         head = NULL;
@@ -10,29 +27,30 @@ public:
     ~queue();
     void add(int ID, string name, int age) {// them vao cuoi
         if (size == MAXSIZE) return;
-        table* newTable = new table(ID, name, age, NULL);
+        count++;// tang idx
+        custumerInfo* newCustumer = new custumerInfo(ID, name, age, NULL,count);
         if (head ==NULL) {
-            head = newTable;
+            head = newCustumer;
             size++;
             return;
         }
-        table* tmp = head;
+        custumerInfo* tmp = head;
         while (tmp->next) {
             tmp = tmp->next;
         }
-        tmp->next = newTable;
+        tmp->next = newCustumer;
         size++;
     }
     void remove() {// xoa dau
         if(head==NULL) return;
-        table *delTable=head;
+        custumerInfo *delCustumer=head;
         head=head->next;
-        delete delTable;
+        delete delCustumer;
         size--;
     }
     void addps(int ID, string name, int age) {// them vao dau 
         if (size == 2 * MAXSIZE) return;
-        table* newTable = new table(ID, name, age, NULL);
+        custumerInfo* newTable = new custumerInfo(ID, name, age, NULL);
         if (head == NULL) {
             head = newTable;
             size++;
@@ -43,30 +61,30 @@ public:
         size++;
     }// ham add vao dau danh cho pq
     void removeItem(string name, int age) {
-        table* pTable = head;
-        table* pPrev = NULL;
-        while(pTable!=NULL) {
-            if(pTable->name==name && pTable->age==age) {
-                if(pTable->next==NULL) {
+        custumerInfo* pCustumer = head;
+        custumerInfo* pPrev = NULL;
+        while(pCustumer!=NULL) {
+            if(pCustumer->name==name && pCustumer->age==age) {
+                if(pCustumer->next==NULL) {
                     if(pPrev) pPrev->next=NULL;
                 }
                 else {
-                    if(pPrev) pPrev->next=pTable->next;
-                    else head=pTable->next;
+                    if(pPrev) pPrev->next=pCustumer->next;
+                    else head=pCustumer->next;
                 }
-                delete pTable;
+                delete pCustumer;
                 size--;
                 if(size==0) head=NULL;
                 return;
             }
-            pPrev=pTable;
-            pTable=pTable->next;
+            pPrev=pCustumer;
+            pCustumer=pCustumer->next;
         }
     }
     void clear() {
         if (size == 0) return;
         while (head != NULL) {
-            table* next = head->next;
+            custumerInfo* next = head->next;
             delete head;
             head = next;
         }
@@ -292,7 +310,7 @@ void ps(int num) {
         return;
     }
     if (num > qps->size || num == 0) num = qps->size;
-    table* tmp = qps->head;
+    custumerInfo* tmp = qps->head;
     for (int i = 0; i < num; i++) {
         cout << tmp->name << endl;
         tmp = tmp->next;
@@ -306,31 +324,33 @@ void pq(int num) {// TH num=0 la se k co tham so num tu dong in het
         return;
     }
     if (num > qpq->size || num == 0) num = qpq->size;
-    table* tmp = qpq->head;
+    custumerInfo* tmp = qpq->head;
     for (int i = 0; i < num; i++) {
         cout << tmp->name << endl;
         tmp = tmp->next;
     }
 }
-
+// danh dau cac idx trung nhau 
 void sq(int num) {
     if (q->size == 0) {
         cout << "Empty" << endl;
         return;
     }
     if (num > q->size) num = q->size;
-    table* tmp = q->head;
+    custumerInfo* tmp = q->head;
     int i = 0;
     while (i < num && tmp->next != NULL) {
-        table* maxPos = tmp;
-        table* ptr = tmp->next;
+        custumerInfo* maxPos = tmp;
+        custumerInfo* ptr = tmp->next;
         while (ptr != NULL) {
-            if (ptr->age > maxPos->age) maxPos = ptr;// chi dung lon hon k >= vi ai toi trc se dc uu tien len trc
+            if (ptr->age > maxPos->age) maxPos = ptr;// neu lon tuoi hon chi xet tuoi
+            else if(ptr->age==maxPos->age && ptr->idx < maxPos->idx) maxPos=ptr;// neu cung tuoi xet idx
             ptr = ptr->next;
         }
         string saveName; saveName = tmp->name; tmp->name = maxPos->name; maxPos->name = saveName;// swap name
         int saveAge; saveAge = tmp->age; tmp->age = maxPos->age; maxPos->age = saveAge;//swap age
         int saveID; saveID = tmp->ID; tmp->ID = maxPos->ID; maxPos->ID = saveID;//swap age
+        int saveidx; saveidx = tmp->idx; tmp->idx = maxPos->idx; maxPos->idx = saveidx;//swap age
         i++;
         tmp = tmp->next;
     }
