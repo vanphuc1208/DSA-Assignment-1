@@ -442,5 +442,3 @@ void simulate(string filename, restaurant* r)
 filein.close();
      q->clear(); qps->clear(); qpq->clear();
 }
-
-a
