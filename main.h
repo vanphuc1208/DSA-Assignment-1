@@ -56,36 +56,4 @@ public:
         return last;
     }
 };
-class queue {
-public:
-table *head;
-int size;
-queue() {
-    head=NULL;
-    size=0;
-}
-~queue();
-void add(int ID,string name,int age) {
-    if(size== MAXSIZE) return;
-    table *newTable= new table (ID, name,age,NULL);
-    if(head==NULL) {
-        head=newTable;
-        size++;
-        return;
-    }
-    table *tmp=head;
-    while(tmp->next!=NULL) {
-        tmp=tmp->next;
-    }
-    tmp->next=newTable;
-    size++;
-}
-void remove() {
-    if(head==NULL) return;
-    table *delTable=head;
-    head=head->next;
-    delete delTable;
-}
-
-};
 #endif

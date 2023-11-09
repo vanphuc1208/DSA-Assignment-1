@@ -441,4 +441,15 @@ void simulate(string filename, restaurant* r)
     
 filein.close();
      q->clear(); qps->clear(); qpq->clear();
+      if (numMtable!=0) {// mo ban gop
+          Mtable->next=nextMtable;
+      }
+      table *tmp=r->recentTable;
+      tmp=tmp->next;
+      while(tmp!=r->recentTable) {
+        table *next=tmp->next;
+        delete tmp;
+        tmp=next;
+      }
 }
+
